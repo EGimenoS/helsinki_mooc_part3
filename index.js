@@ -1,5 +1,8 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
+
+app.use(bodyParser.json());
 
 let persons = [
   {
@@ -29,30 +32,54 @@ let persons = [
   }
 ];
 
-app.get('/api/persons', (req, res) => {
+app.get("/api/persons", (req, res) => {
   res.json(persons);
 });
 
-app.get('/info', (req, res) => {
-  res.send(`<div>PhoneBook has info for ${persons.length} people</div>`)
-})
+app.get("/info", (req, res) => {
+  res.send(`<div>PhoneBook has info for ${persons.length} people</div>`);
+});
 
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(person => person.id === id)
+app.get("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const person = persons.find(person => person.id === id);
   if (person) {
     res.json(person);
   } else {
-    res.status(404).end()
+    res.status(404).end();
   }
-  
-})
+});
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
   const person = persons.filter(person => person.id !== id);
-  res.status(204).end()
-})
+  res.status(204).end();
+});
+
+const generateId = () => {
+  const maxId =
+    persons.length > 0 ? Math.max(...persons.map(person => person.id)) : 0;
+  return maxId + 1;
+};
+app.post("api/persons", (req, res) => {
+  const body = req.body;
+
+  if (!body.content) {
+    return response.status(400).json({
+      error: "content missing"
+    });
+  }
+
+  const person = {
+    name: body.name,
+    number: body.number,
+    id: generateId()
+  }
+
+  persons = persons.concat(person);
+  
+  res.json(person);
+});
 
 const PORT = 3001;
 app.listen(PORT, () => {
