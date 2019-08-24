@@ -3,4 +3,4 @@ Part 3 of the fullstack open MOOC from Helsinki University
 
 Link to the deployed example:
 
-https://phonebook-backend-egs.herokuapp.com/api/persons
+https://phonebook-backend-egs.herokuapp.com/
