@@ -2,7 +2,5 @@ POST http://localhost:3001/api/persons
 content-type: application/json
 
 {
-  "name": "Clint Eastwood",
-  "number": "87-986666",
-  "id": 14
+  "number": "87-986666"
 }

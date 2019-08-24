@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
+
 const bodyParser = require("body-parser");
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 let persons = [
@@ -57,27 +59,42 @@ app.delete("/api/persons/:id", (req, res) => {
 });
 
 const generateId = () => {
-  const maxId =
-    persons.length > 0 ? Math.max(...persons.map(person => person.id)) : 0;
-  return maxId + 1;
+  return Math.floor(Math.random() * (100000, 1)) + 1;
 };
-app.post("api/persons", (req, res) => {
+
+const checkDuplicated = (name) => {
+  return persons.some(person => person.name === name)
+}
+
+app.post("/api/persons", (req, res) => {
   const body = req.body;
 
-  if (!body.content) {
-    return response.status(400).json({
+  if (!body) {
+    return res.status(400).json({
       error: "content missing"
     });
   }
 
+  if (!body.name || !body.number) {
+     return res.status(400).json({
+       error: "name or number missing, both fields required"
+     });
+  }
+
+  if (checkDuplicated(body.name)) {
+    return res.status(400).json({
+      error: "the name already exists"
+    });
+  }
+  
   const person = {
     name: body.name,
     number: body.number,
     id: generateId()
-  }
+  };
 
   persons = persons.concat(person);
-  
+
   res.json(person);
 });
 
