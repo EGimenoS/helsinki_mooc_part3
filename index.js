@@ -1,12 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-
-app.use(cors());
-
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 
+app.use(express.static("build"));
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
