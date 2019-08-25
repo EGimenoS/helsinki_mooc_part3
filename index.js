@@ -3,6 +3,8 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const mongoose = require("mongoose");
+const config = require("./config");
 
 app.use(express.static("build"));
 app.use(cors());
@@ -18,36 +20,20 @@ app.use(
   })
 );
 
-let persons = [
-  {
-    name: "David Heinemeier Hansson",
-    number: "15-876544",
-    id: 7
-  },
-  {
-    name: "Evan Yu",
-    number: "87-986666",
-    id: 8
-  },
-  {
-    name: "Martin Fowler",
-    number: "5555-78999",
-    id: 10
-  },
-  {
-    name: "Sandi Metz",
-    number: "555-877666",
-    id: 11
-  },
-  {
-    name: "Dan Abramov",
-    number: "34-77635353",
-    id: 12
-  }
-];
+const url = `mongodb+srv://fullstack:${config.password}@fullstack-mooc-egs-7agwf.mongodb.net/phonebook?retryWrites=true&w=majority`;
+
+mongoose.connect(url, { useNewUrlParser: true });
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+  id: Number
+});
+
+const Person = mongoose.model("Person", personSchema);
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({}).then(persons => res.json(persons));
 });
 
 app.get("/info", (req, res) => {
@@ -74,9 +60,9 @@ const generateId = () => {
   return Math.floor(Math.random() * (100000, 1)) + 1;
 };
 
-const checkDuplicated = (name) => {
-  return persons.some(person => person.name === name)
-}
+const checkDuplicated = name => {
+  return persons.some(person => person.name === name);
+};
 
 app.post("/api/persons", (req, res) => {
   const body = req.body;
@@ -88,9 +74,9 @@ app.post("/api/persons", (req, res) => {
   }
 
   if (!body.name || !body.number) {
-     return res.status(400).json({
-       error: "name or number missing, both fields required"
-     });
+    return res.status(400).json({
+      error: "name or number missing, both fields required"
+    });
   }
 
   if (checkDuplicated(body.name)) {
@@ -98,7 +84,7 @@ app.post("/api/persons", (req, res) => {
       error: "the name already exists"
     });
   }
-  
+
   const person = {
     name: body.name,
     number: body.number,
