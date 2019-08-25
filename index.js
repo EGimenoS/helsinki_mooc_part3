@@ -1,10 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
-const mongoose = require("mongoose");
-const config = require("./config");
 
 app.use(express.static("build"));
 app.use(cors());
@@ -20,20 +19,12 @@ app.use(
   })
 );
 
-const url = `mongodb+srv://fullstack:${config.password}@fullstack-mooc-egs-7agwf.mongodb.net/phonebook?retryWrites=true&w=majority`;
-
-mongoose.connect(url, { useNewUrlParser: true });
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-  id: Number
-});
-
-const Person = mongoose.model("Person", personSchema);
+const Person = require("./models/person");
 
 app.get("/api/persons", (req, res) => {
-  Person.find({}).then(persons => res.json(persons));
+  Person.find({}).then(persons =>
+    res.json(persons.map(person => person.toJSON()))
+  );
 });
 
 app.get("/info", (req, res) => {
@@ -56,10 +47,6 @@ app.delete("/api/persons/:id", (req, res) => {
   res.status(204).end();
 });
 
-const generateId = () => {
-  return Math.floor(Math.random() * (100000, 1)) + 1;
-};
-
 const checkDuplicated = name => {
   return persons.some(person => person.name === name);
 };
@@ -79,21 +66,20 @@ app.post("/api/persons", (req, res) => {
     });
   }
 
-  if (checkDuplicated(body.name)) {
-    return res.status(400).json({
-      error: "the name already exists"
-    });
-  }
+  // if (checkDuplicated(body.name)) {
+  //   return res.status(400).json({
+  //     error: "the name already exists"
+  //   });
+  // }
 
-  const person = {
+  const person = new Person ({
     name: body.name,
-    number: body.number,
-    id: generateId()
-  };
+    number: body.number
+  });
 
-  persons = persons.concat(person);
-
-  res.json(person);
+  person.save().then(savedPerson => {
+    res.json(savedPerson.toJSON())
+  })
 });
 
 const PORT = process.env.PORT || 3001;
