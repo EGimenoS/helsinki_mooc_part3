@@ -40,7 +40,9 @@ app.get("/api/persons", (req, res) => {
 });
 
 app.get("/info", (req, res) => {
-  res.send(`<div>PhoneBook has info for ${persons.length} people</div>`);
+  Person.find({}).then(persons =>
+    res.send(`<div>PhoneBook has info for ${persons.length} people</div>`)
+  );
 });
 
 app.get("/api/persons/:id", (req, res, next) => {
