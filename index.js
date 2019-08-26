@@ -19,18 +19,6 @@ app.use(
   })
 );
 
-const errorHandler = (error, req, res, next) => {
-  console.error(error.message);
-
-  if (error.name === "CastError" && error.kind === "ObjectId") {
-    return res.status(400).send({ error: "malformatted id" });
-  }
-
-  next(error);
-};
-
-app.use(errorHandler);
-
 const Person = require("./models/person");
 
 app.get("/api/persons", (req, res) => {
@@ -71,7 +59,7 @@ const checkDuplicated = name => {
   return persons.some(person => person.name === name);
 };
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
   if (!body) {
@@ -86,21 +74,32 @@ app.post("/api/persons", (req, res) => {
     });
   }
 
-  // if (checkDuplicated(body.name)) {
-  //   return res.status(400).json({
-  //     error: "the name already exists"
-  //   });
-  // }
-
   const person = new Person({
     name: body.name,
     number: body.number
   });
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson.toJSON());
-  });
+  person
+    .save()
+    .then(savedPerson => {
+      res.json(savedPerson.toJSON());
+    })
+    .catch(error => next(error));
 });
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError" && error.kind === "ObjectId") {
+    return res.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
